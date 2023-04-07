@@ -51,7 +51,7 @@ def __tarjan_custom(G):
     """
     return (k, scc, rep_scc)
     k: number of strongly connected components
-    scc: vector of components 
+    scc: vector of components
     rep_scc: vector of vertex representat for each scc
     """
     pref = [0] * G.order
@@ -75,7 +75,7 @@ def __condensation(G):
     Returns Gr, SCC, rep_scc
     Gr: the condensation of the digraph G
     SCC: the vector of strongly connected components,
-      a vector that gives for each vertex the number of the component 
+      a vector that gives for each vertex the number of the component
       it belongs to (the vertex in Gr).
     rep_scc: the vector containing for each index i a vertex contained in the i-th strongly connected component.
     """
@@ -99,7 +99,7 @@ def __condensation(G):
 # - Robin
 
 
-def __find_pairs(Gr, src, x, M, out_deg, pairs, foundSink):
+def __find_pairs(Gr, src, x, M, out_deg, pairs):
     # Mark the vertex as visited
     M[x] = True
 
@@ -107,12 +107,7 @@ def __find_pairs(Gr, src, x, M, out_deg, pairs, foundSink):
     # If it is, append it in the pairs list,
     # and return the information that the first sink has been found.
     if out_deg[x] == 0:
-        if not foundSink:
-            pairs.append((src, x))
-        else:
-            # Unmark the vertex so that future sources that will explore them will add them in pairs.
-            M[x] = False
-        return True
+        return x
 
     # Iterate through the neighbours of x
     for adj in Gr.adjlists[x]:
@@ -126,11 +121,13 @@ def __find_pairs(Gr, src, x, M, out_deg, pairs, foundSink):
             # Recursive call:
             # Search if the first sounk has been found.
             # If it is, we still need to mark all the spanning forest so that reachable sinks don't get appended.
-            foundSink = __find_pairs(Gr, src, adj, M,
-                                     out_deg, pairs,
-                                     foundSink)
+            sink = __find_pairs(Gr, src, adj, M,
+                                out_deg, pairs,
+                                )
+            if sink is not None:
+                return sink
 
-    return foundSink
+    return None
 
 
 def __add_edge(G, scc_x, scc_y, rep_scc):
@@ -229,7 +226,9 @@ def wikipedia(G):
     pairs = []
     M = [False]*Gr.order
     for src in sources:
-        __find_pairs(Gr, src, src, M, out_deg, pairs, False)
+        sink = __find_pairs(Gr, src, src, M, out_deg, pairs)
+        if sink is not None:
+            pairs.append((src, sink))
 
     # Detect unused source and sinks
     # TODO: Can be improved by detecting unused source/sources sinks during the dfs
