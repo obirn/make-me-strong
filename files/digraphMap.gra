@@ -1,0 +1,25 @@
+#name: Town Map
+#usage: map from S4 tuto 1 - strong connectivity
+#measures: n = 14, p = 19, k = 12
+#display: neato
+1
+14
+0 1
+1 2
+2 3
+0 9
+12 1
+12 13
+13 11
+11 12
+2 4
+13 4
+4 5
+5 6
+6 3
+5 7
+8 6
+9 10
+10 7
+7 8
+10 11
