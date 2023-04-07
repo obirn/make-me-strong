@@ -225,20 +225,21 @@ def wikipedia(G):
     # Compute the pairs of sources and sinks
     pairs = []
     M = [False]*Gr.order
+    unused_sources = []
+
     for src in sources:
         sink = __find_pairs(Gr, src, src, M, out_deg, pairs)
         if sink is not None:
             pairs.append((src, sink))
+        else:
+            unused_sources.append(src)
 
     # Detect unused source and sinks
     # TODO: Can be improved by detecting unused source/sources sinks during the dfs
-    source_presence = [0] * Gr.order
     sinks_presence = [0] * Gr.order
     for (source, sink) in pairs:
         sinks_presence[sink] += 1
-        source_presence[source] += 1
 
-    unused_sources = [src for src in sources if source_presence[src] == 0]
     unused_sinks = [sink for sink in sinks if sinks_presence[sink] == 0]
 
     num_edges = __add_first_set_of_edges(G, pairs, isolateds, rep_scc)
