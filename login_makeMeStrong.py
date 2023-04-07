@@ -30,7 +30,7 @@ def __aux_tarjan(G, x, pref, cpt, scc, noscc, vertexStack, rep_scc):
     for y in G.adjlists[x]:
         if pref[y] == 0:
             (return_y, cpt, noscc) = __aux_tarjan(
-                G, y, pref, cpt, scc, noscc, vertexStack)
+                G, y, pref, cpt, scc, noscc, vertexStack, rep_scc)
             return_x = min(return_x, return_y)
         else:
             return_x = min(return_x, pref[y])
@@ -70,7 +70,7 @@ def __tarjan_custom(G):
 # ------------------------------------------------------------------------------
 # Condensation built from Tarjan
 
-def condensation(G):
+def __condensation(G):
     """
     Returns Gr, SCC, rep_scc
     Gr: the condensation of the digraph G
@@ -196,7 +196,7 @@ def wikipedia(G):
     """
 
     # Get the condensation graph and vector of strongly connex components
-    (Gr, vscc) = scc.condensation(G)
+    (Gr, vscc, rep_scc) = __condensation(G)
 
     if Gr.order == 1:
         return 0
@@ -265,86 +265,3 @@ def wikipedia(G):
         i += 1
 
     return num_edges
-
-
-def __paires_dfs(Gr, x, visited, in_degrees, out_degrees, pairs):
-    visited[x] = True
-    for adj in Gr.adjlists[x]:
-        if not visited[adj]:
-            __paires_dfs(Gr, adj, visited, in_degrees, out_degrees, pairs)
-    if in_degrees[x] == 0 and out_degrees[x] > 0:
-        for adj in Gr.adjlists[x]:
-            if out_degrees[adj] == 0:
-                pairs.append((x, adj))
-                in_degrees[x], out_degrees[x] = 0, 0
-                in_degrees[adj], out_degrees[adj] = 0, 0
-                break
-
-
-def wikipedia(G):
-    # On trouve la condensation du graphe
-    Gr, SCC = scc.condensation(G)
-
-    # On trouve les ss [s], les puits [p] et les sommets isolés [q].
-    # Rq :    Les ss sont les composantes fortement connectées avec au
-    #           moins une arête sortante, mais aucune arête entrante. Les puits
-    #           sont les composantes fortement connectées avec des arêtes entrantes
-    #           mais aucune arête sortante. Les sommets isolés sont les
-    #           composantes fortement connectées sans arêtes entrantes ni
-    #           sortantes.
-
-    s_source, t_puit, q_isole = [], [], []
-    in_degrees, out_degrees = [0]*G.order, [0]*G.order
-    for x in range(Gr.order):
-        for adj in G.adjlists[x]:
-            in_degrees[adj] += 1
-            out_degrees[x] += 1
-
-    for s in range(Gr.order):
-        if in_degrees[s] == 0 and out_degrees[s] == 0:
-            q_isole.append(s)
-        elif in_degrees[s] == 0:
-            s_source.append(s)
-        elif out_degrees[s] == 0:
-            t_puit.append(s)
-
-    # On calcule le nombre de edges à ajouter
-    s, t, q = len(s_source), len(t_puit), len(q_isole)
-    nb_edges = max(s+q, t+q)
-
-    # On parcours en dfs Gr pour trouver les couples (s,t)
-    pairs = []
-    visited = [False]*Gr.order
-
-    for src in s_source:
-        sink = __paires_dfs(Gr, src, visited, in_degrees, out_degrees, pairs)
-
-    # On se sert des 3 listes pour relier les noeuds entre eux => fortement connexe
-    # On suit plusieurs étapes pour ça :
-    # I) On connecte les paires avec celles isolées dans
-    cycle = pairs + [(q_isole[k], q_isole[k+1]) for k in range(len(q_isole) - 1)
-                     ] + [(q_isole[-1], q_isole[0])] if q_isole else []
-
-    # II) On connecte les t_puits qui restent aux s_ss qui restent
-    restes_s = [x for x in s_source if in_degrees[x] == 0]
-    restes_t = [x for x in t_puit if out_degrees[x] == 0]
-    le_reste = list(zip(restes_t, restes_s))
-
-    # III) On connecte les s_ss et les t_puits au cycle en ajoutant un edge par s_s ou t_p
-    derniers_edges = []
-    if len(restes_s) > len(restes_t):
-        for k, s in enumerate(restes_s):
-            if k >= len(restes_t) and cycle:
-                edge = (s, cycle[0][0])
-                derniers_edges.append(edge)
-    elif len(restes_t) > len(restes_s) and cycle:
-        for k in range(len(restes_s), len(restes_t)):
-            edge = (cycle[0][1], restes_t[k])
-            derniers_edges.append(edge)
-
-    # IV) On ajoute les arêtes calculées à G
-    for (src, tpt) in cycle + le_reste + derniers_edges:
-        G.addedge(SCC[src], SCC[tpt])
-
-    # V) On a fini !
-    return nb_edges
