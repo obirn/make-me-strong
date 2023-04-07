@@ -99,35 +99,19 @@ def __condensation(G):
 # - Robin
 
 
-def __find_pairs(Gr, src, x, M, out_deg, pairs):
-    # Mark the vertex as visited
+def __find_pairs(Gr, src, x, M, out_deg, sink, unused_sinks):
     M[x] = True
-
-    # Detect if it is the first sink to be found during the dfs.
-    # If it is, append it in the pairs list,
-    # and return the information that the first sink has been found.
     if out_deg[x] == 0:
-        return x
+        if sink is None:
+            return x
+        else:
+            unused_sinks.append(x)
+            return sink
 
-    # Iterate through the neighbours of x
     for adj in Gr.adjlists[x]:
-
-        # If the neighbour has been marked, it means that another source marked this vertex AND that a sink has been found.
-        # Thus, we don't need to explore this path.
-
-        # Explore the unmarked vertices
         if not M[adj]:
-
-            # Recursive call:
-            # Search if the first sounk has been found.
-            # If it is, we still need to mark all the spanning forest so that reachable sinks don't get appended.
-            sink = __find_pairs(Gr, src, adj, M,
-                                out_deg, pairs,
-                                )
-            if sink is not None:
-                return sink
-
-    return None
+            sink = __find_pairs(Gr, src, adj, M, out_deg, sink, unused_sinks)
+    return sink
 
 
 def __add_edge(G, scc_x, scc_y, rep_scc):
@@ -226,25 +210,17 @@ def wikipedia(G):
     pairs = []
     M = [False]*Gr.order
     unused_sources = []
+    unused_sinks = []
 
     for src in sources:
-        sink = __find_pairs(Gr, src, src, M, out_deg, pairs)
+        sink = __find_pairs(Gr, src, src, M, out_deg, None, unused_sinks)
         if sink is not None:
             pairs.append((src, sink))
         else:
             unused_sources.append(src)
 
-    # Detect unused source and sinks
-    # TODO: Can be improved by detecting unused source/sources sinks during the dfs
-    sinks_presence = [0] * Gr.order
-    for (source, sink) in pairs:
-        sinks_presence[sink] += 1
-
-    unused_sinks = [sink for sink in sinks if sinks_presence[sink] == 0]
-
     num_edges = __add_first_set_of_edges(G, pairs, isolateds, rep_scc)
 
-    # TODO: This sure can be improved too
     len_usrc = len(unused_sources)
     len_usinks = len(unused_sinks)
 
