@@ -96,7 +96,10 @@ for name, func in all_functions:
             # input()
 
 #           Function call, to modify for more information about inside code
+            # print(graph_path)
             edges = func(G)
+            # print(edges)
+            # print()
 
             Gr, _ = scc.condensation(G)
             if (Gr.order == 1):
@@ -113,8 +116,6 @@ for name, func in all_functions:
 
 #           Edges print
             print("Edges added: ", edges)
-
-            # print()
             
             # input()
 
