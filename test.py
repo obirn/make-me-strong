@@ -88,11 +88,12 @@ for name, func in all_functions:
 
 
 #           Print before modification
-            '''print("Before calling ", 
-                    func, " on ", 
-                    graph_path, "\n", 
-                    graph.todot(G), "\n")
-            '''
+            # print("Before calling ", 
+            #         func, " on ", 
+            #         graph_path, "\n", 
+            #         graph.todot(G), "\n")
+            
+            # input()
 
 #           Function call, to modify for more information about inside code
             edges = func(G)
@@ -112,6 +113,10 @@ for name, func in all_functions:
 
 #           Edges print
             print("Edges added: ", edges)
+
+            # print()
+            
+            # input()
 
 #           Print after modifications
             '''print("After calling ", 
